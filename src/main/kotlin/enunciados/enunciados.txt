@@ -1,0 +1,1 @@
+Escriu un programa que donat dos nombres enters imprimeixi la seqüència entre el primer i el segon.;Per l’entrada rebreu dos nombres enters.;La sortida ha de ser una seqüència de números del primer fins al segon nombre introduït, imprimint-los tot en una mateixa línia.;

@@ -17,12 +17,12 @@ class ListaProblemas{
 
 
 }
-class Problema (var enunciado: String, var listaInputPub: Array<String>,
-                var listaOutputPub: Array<String>, var inputPriv: Array<String>, var outputPriv: Array<String>,
+data class Problema (var enunciado: String, var inputPub: Array<String>,
+                var outputPub: Array<String>, var inputPriv: Array<String>,
+                     var outputPriv: Array<String>
                 ) {
-//, false, 0
 }
-class ProblemaResuelto (var enunciado: String, var inputPriv: String, var outputPriv: String,
+data class ProblemaResuelto (var enunciado: String, var inputPriv: String, var outputPriv: String,
                 var resuelto: Boolean, var intentos: Int) {
 
 }

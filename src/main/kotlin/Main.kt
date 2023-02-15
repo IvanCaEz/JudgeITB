@@ -1,3 +1,4 @@
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.*
 
@@ -56,6 +57,11 @@ fun main() {
             println("$purple${bold}Intents:$reset ${problemasResueltos[i].intentos}")
         }
     }
+}
+
+fun aaa(){
+    val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
+    val problema = Json.decodeFromString<Problema>(numProblema)
 }
 
 fun enunciados(currentProblema: Problema){

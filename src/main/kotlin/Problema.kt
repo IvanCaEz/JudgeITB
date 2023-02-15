@@ -51,7 +51,7 @@ data class Problema (var numProblema: Int, var enunciado: String, var inputPub: 
         var userAnswer: String
         var resolt = false
         var intents = 0
-        var listOfUserAnswers = mutableListOf<String>()
+        val listOfUserAnswers = mutableListOf<String>()
         do {
             intents++
             userAnswer = scanner.nextLine().uppercase().toString()

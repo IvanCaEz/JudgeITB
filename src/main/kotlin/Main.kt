@@ -1,6 +1,11 @@
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+
+
 
 const val reset = "\u001b[0m"
 const val box = "\u001b[51m"
@@ -21,87 +26,114 @@ const val blue = "\u001b[38;5;69m"
 
 val scanner = Scanner(System.`in`)
 fun main() {
-    val problemasResueltos = mutableListOf<ProblemaResuelto>()
     var numProblema = 0
-    do {
-        println("Problema $box$bold$pink ${numProblema + 1} $reset")
-        val currentProblema = ListaProblemas().listaProblemas[numProblema]
-        enunciados(currentProblema)
-        println("Vols intentar aquest problema?\n$green$bold$box SI $reset $red$bold$box NO $reset")
-        val intentar = scanner.nextLine().uppercase()
-        if (intentar == "SI"){
-            val problema = intentarProblema(currentProblema, problemasResueltos)
-            if (problema.first){
-                val intents= problema.second
-                println("Has acertat amb $intents intents")
-            } else println("No has pogut amb el problema")
-            numProblema++
-        } else if (intentar == "NO"){
-            problemasResueltos.add(ProblemaResuelto(currentProblema.enunciado,
-                "No intentado", "No intentado",false, 0 ))
-            numProblema++
+    val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
+    var currentProblema: Problema
+    var problema: Problema
+    var problemasRemaining: MutableList<Int>
+    when (showMenu()){
+        1 ->{
+            problemasRemaining = itinerariAprenentatge()
+            for (i in problemasRemaining){
+                numProblema = i
+                do {
+                    println("Problema $box$bold$pink ${numProblema + 1} $reset")
+                    problema = Json.decodeFromString<Problema>(listaProblemas[numProblema])
+                    currentProblema = Problema(problema.numProblema, problema.enunciado,problema.inputPub,
+                        problema.outputPub,problema.inputPriv,problema.outputPriv,
+                        resuelto = false, intentos = 0)
+                    currentProblema.mostrarProblema(problema)
+                    println("Vols intentar aquest problema?\n$green$bold$box SI $reset $red$bold$box NO $reset")
+                    val intentar = scanner.nextLine().uppercase()
+
+                    if (intentar == "SI"){
+                        val intentoProblema = currentProblema.intentarProblema(problema.numProblema, problema)
+                        if (intentoProblema){
+                            println("Has acertat !")
+                        } else println("No has pogut amb el problema")
+
+                     //   numProblema++
+
+                    } else if (intentar == "NO"){
+                    //    numProblema++
+                        val userIntent = Json.encodeToString<Intento>(Intento(numProblema, currentProblema.enunciado,
+                            "NO INTENTAT", mutableListOf("NO INTENTAT"), 0, false ))
+
+                        File("src/main/kotlin/problemes/intentos.json").appendText(userIntent+"\n")
+                    }
+
+                } while (numProblema != 3 || intentar == "SORTIR")
+
+            }
         }
-    } while (numProblema != ListaProblemas().listaProblemas.size)
+        2 -> showProblemList()
+        3 -> showHistoryCompleted()
+        4 -> showHelp()
+        5 -> profe()
+    }
+
 
     println("Vols veure l'historial?\n$green$bold$box SI $reset $red$bold$box NO $reset")
     val historial = scanner.nextLine().uppercase()
     if (historial == "SI"){
-        for (i in 0 until problemasResueltos.size){
-            println("Problema $box$bold$pink ${i + 1} $reset")
-            println(problemasResueltos[i].enunciado)
-            println("$purple${bold}Entrada:$reset ${problemasResueltos[i].inputPriv}")
-            println("$purple${bold}Sortida:$reset ${problemasResueltos[i].outputPriv}")
-            if (problemasResueltos[i].resuelto){
-                println("$purple${bold}Resolt:$reset $bold$box$green SI $reset")
-            } else println("$purple${bold}Resolt:$reset $bold$box$red NO $reset")
-            println("$purple${bold}Intents:$reset ${problemasResueltos[i].intentos}")
-        }
+        println(showHistory())
     }
 }
 
-fun aaa(){
-    val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
-    val problema = Json.decodeFromString<Problema>(numProblema)
-}
-
-fun enunciados(currentProblema: Problema){
-    var listaEnunciados = File("src/main/kotlin/enunciados/enunciados.txt").readText()
-    var listaOutputPub = File("src/main/kotlin/provesPublic/outputsPublic.txt").readText()
-    var listaInputPub = File("src/main/kotlin/provesPublic/inputsPublic.txt").readText()
-
-    var listaInputPriv = File("src/main/kotlin/provesPriv/inputPriv.txt").readText()
-
-    println(currentProblema.enunciado)
-    println("$cyan${bold}Exemple 1$reset")
-    println("${currentProblema.inputPub[0]}\n$purple${bold}Entrada:$reset ${currentProblema.inputPub[1]}")
-    println("${currentProblema.outputPub[0]}\n$purple${bold}Sortida:$reset ${currentProblema.outputPub[1]}")
-    println("$cyan${bold}Exemple 2$reset")
-    println("$purple${bold}Entrada:$reset ${currentProblema.inputPub[2]}")
-    println("$purple${bold}Sortida:$reset ${currentProblema.outputPub[2]}")
+fun profe(){
 
 }
-fun intentarProblema(currentProblema: Problema, problemasResueltos: MutableList<ProblemaResuelto>): Pair<Boolean, Int> {
-    val random = (0..2).random()
-    println("$purple${bold}Entrada:$reset ${currentProblema.inputPriv[random]}")
-    println("$purple${bold}Sortida:$reset ???")
-    println("Per abandonar el problema entra SORTIR")
-    var userAnswer: String
-    var resolt = false
-    var intents = 0
-    do {
-        intents++
-        userAnswer = scanner.nextLine().uppercase().toString()
-        if (userAnswer != currentProblema.outputPriv[random].uppercase() && userAnswer != "SORTIR" ) {
-            println("Resposta incorrecta, torna-ho a intentar")
-        } else if (userAnswer == currentProblema.outputPriv[random].uppercase()){
-            resolt = true
+
+fun showHelp(){
+
+}
+fun showHistoryCompleted(){
+
+}
+fun showProblemList(){
+
+}
+fun itinerariAprenentatge(): MutableList<Int> {
+    val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
+    val listaProblemasResueltos = mutableListOf<Int>()
+    var listaProblemas = mutableListOf(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
+    for (i in listaIntentos) {
+        val intento = Json.decodeFromString<Intento>(i)
+        if (intento.numProblema in listaProblemas){
+            listaProblemas.remove(intento.numProblema)
         }
-    } while (userAnswer != currentProblema.outputPriv[random].uppercase() && userAnswer != "SORTIR")
-
-    problemasResueltos.add(ProblemaResuelto(currentProblema.enunciado,
-        currentProblema.inputPriv[random], currentProblema.outputPriv[random],resolt, intents ))
-
-    return (userAnswer == currentProblema.outputPriv[random]) to intents
-
+    }
+    return  listaProblemas
 }
+fun showHistory(){
+    val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
+    for (i in listaIntentos){
+        val intento = Json.decodeFromString<Intento>(i)
+        println("Problema $box$bold$pink ${intento.numProblema} $reset")
+        println(intento.enunciado)
+        println("$purple${bold}Entrada:$reset ${intento.inputPriv}")
+        println("$purple${bold}Sortida:$reset ${intento.outputPriv}")
+        if (intento.resuelto){
+            println("$purple${bold}Resolt:$reset $bold$box$green SI $reset")
+        } else println("$purple${bold}Resolt:$reset $bold$box$red NO $reset")
+        println("$purple${bold}Intents:$reset ${intento.intentos}")
+    }
+}
+
+fun showMenu(): Int {
+    var instruction: Int
+    do {
+        println("1. Seguir amb l'itinerari del projecte")
+        println("2. Llista de problemes")
+        println("3. Consultar històric de problemes resolts")
+        println("4. Ajuda")
+        println("5. Identifiació de professorat")
+        println("6. Sortir")
+        instruction = scanner.nextInt()
+    } while (instruction !in 1..6 )
+
+    return instruction
+}
+
+
 

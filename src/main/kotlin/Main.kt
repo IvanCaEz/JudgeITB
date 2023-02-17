@@ -1,7 +1,6 @@
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 
@@ -67,11 +66,22 @@ fun main() {
 
             }
         }
-        2 -> showProblemList()
+        2 ->{
+           val problemAIntentar = showProblemList(listaProblemas)
+            currentProblema = decodeProblem(problemAIntentar)
+
+            println("Problema $box$bold$pink $problemAIntentar $reset")
+            currentProblema.mostrarProblema(currentProblema)
+            val intentoProblema = currentProblema.intentarProblema(problemAIntentar, currentProblema)
+            if (intentoProblema) {
+                println("Has acertat !")
+            } else{
+                println("No has pogut amb el problema")
+            }
+        }
         3 -> showHistoryOfCompletedProblems()
         4 -> showHelp()
         5 ->{
-
             if (teacherLogin()){
                 when (showMenu("Teacher")){
                     1 ->{
@@ -88,7 +98,6 @@ fun main() {
                         3 -> resultadoGrafic()
                         }
                     }
-
                 }
             } else{
                 println("No t'has pogut identificar")
@@ -96,15 +105,39 @@ fun main() {
         }
     }
 
+}
 
-    /*
-     println("Vols veure l'historial?\n$green$bold$box SI $reset $red$bold$box NO $reset")
-    val historial = scanner.nextLine().uppercase()
-    if (historial == "SI"){
-        println(showHistory())
+fun decodeProblem(numProblema: Int): Problema {
+    val listaProblemas = File("src/main/kotlin/problemes/problemes.json").readLines()
+    val problema: Problema = Json.decodeFromString(listaProblemas[numProblema])
+    return Problema(
+        problema.numProblema, problema.enunciado, problema.inputPub,
+        problema.outputPub, problema.inputPriv, problema.outputPriv,
+        problema.resuelto, problema.intentos
+    )
+}
+
+fun showProblemList(listaProblemas: List<String>): Int {
+    var problemAIntentar: Int
+    var numProblema = 0
+    var currentProblema: Problema
+    var problema: Problema
+    for (i in listaProblemas){
+        println("Problema $box$bold$pink ${numProblema+1} $reset")
+
+        problema = Json.decodeFromString(listaProblemas[numProblema])
+        currentProblema = Problema(problema.numProblema, problema.enunciado,problema.inputPub,
+            problema.outputPub,problema.inputPriv,problema.outputPriv,
+            problema.resuelto, problema.intentos)
+
+        currentProblema.mostrarProblema(problema)
+        numProblema++
     }
-     */
-
+    println("Entra el número del problema que vols intentar")
+    do {
+        problemAIntentar = scanner.nextLine().toInt()
+    } while (problemAIntentar > listaProblemas.size)
+    return problemAIntentar
 }
 fun addNewProblem(){
     val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
@@ -197,6 +230,23 @@ fun teacherLogin(): Boolean {
 }
 
 fun showHelp(){
+    println("""    Benvingut al ═════════════ Judge$blue$bold ITB $reset═════════════
+        |══════════════════════════$bold$blue ESTUDIANTS $reset══════════════════════════
+        |1. Seguir amb l'itinerari -> Mostrarà els problemes que falten
+        |                             per resoldre.
+        |2. Llista de problemes   ->  Mostrarà una llista de tots els 
+        |                             problemes i permetrà escollir els
+        |                             problemes que vols fer.
+        |3. Consultar històric   ->   Mostrarà els problemes resolts amb
+        |                             les respostes i intents que van
+        |                             ser entrats.
+        |══════════════════════════$bold$blue PROFESSORS $reset══════════════════════════
+        |El sistema et demanarà un num d'usuari i una contrasenya per
+        |identificar-te.
+        |1. Afegir problema -> Permetrà afegir un nou problema a
+        |                      la base de dades.
+        |2. Report -> TODO
+    """.trimMargin())
 
 }
 fun showHistoryOfCompletedProblems() {
@@ -213,9 +263,7 @@ fun showHistoryOfCompletedProblems() {
         }
     }
 }
-fun showProblemList(){
 
-}
 fun itinerariAprenentatge(): MutableList<Int> {
     val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
     val listaProblemas = mutableListOf(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)

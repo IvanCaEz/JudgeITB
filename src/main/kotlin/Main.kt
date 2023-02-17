@@ -36,10 +36,11 @@ fun main() {
         instruction = scanner.nextLine().toInt()
         when(instruction){
             1 ->{
+                var stop = false
                 val problemasRemaining = itinerariAprenentatge(listaIntentos)
-                for (i in problemasRemaining){
-                    numProblema = i-1
-                    do {
+                while (!stop) {
+                    for (i in problemasRemaining){
+                        numProblema = i-1
                         println("Problema $box$bold$pink ${numProblema+1} $reset")
 
                         problema = Json.decodeFromString(listaProblemas[numProblema])
@@ -49,27 +50,33 @@ fun main() {
 
                         currentProblema.mostrarProblema(problema)
 
-                        println("Vols intentar aquest problema?\n$green$bold$box SI $reset $red$bold$box NO $reset")
+                        println("""Vols intentar aquest problema?
+                                    |         $green$bold$box SI $reset $yellow$bold$box NEXT $reset
+                                    |Per deixar de fer problemes entra $red$bold$box SORTIR $reset""".trimMargin())
 
                         val intentar = scanner.nextLine().uppercase()
 
                         if (intentar == "SI"){
+
                             val intentoProblema = currentProblema.intentarProblema(problema.numProblema, problema)
                             if (intentoProblema) {
                                 println("Has acertat !")
                             } else{
                                 println("No has pogut amb el problema")
                             }
-                        } else if (intentar == "NO"){
+                        } else if (intentar == "NEXT"){
+                            println("""Carregant el següent problema$blue$bold ... $reset""".trimMargin())
                             val userIntent = Json.encodeToString(Intento(currentProblema.numProblema, currentProblema.enunciado,
                                 "NO INTENTAT", mutableListOf("NO INTENTAT"), 0, false ))
 
                             File("src/main/kotlin/problemes/intentos.json").appendText(userIntent+"\n")
+                        } else if (intentar == "SORTIR"){
+                            stop = true
+                            break
                         }
-
-                    } while (intentar != "NEXT")
-
+                    }
                 }
+
             }
             2 ->{
                 val problemAIntentar = showProblemList(listaProblemas)

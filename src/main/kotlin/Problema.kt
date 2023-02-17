@@ -1,6 +1,4 @@
-import com.sun.org.apache.xpath.internal.operations.Bool
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -8,7 +6,7 @@ import java.io.File
 
 
 @Serializable
-data class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array<String>,
+class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array<String>,
                 var outputPub: Array<String>, var inputPriv: Array<String>,
                      var outputPriv: Array<String>, var resuelto: Boolean, var intentos: Int) {
 
@@ -30,7 +28,7 @@ data class Problema (var numProblema: Int, var enunciado: String, var inputPub: 
         println("El teu input")
         println("$purple${bold}Entrada:$reset ${currentProblema.inputPriv[random]}")
         println("$purple${bold}Sortida:$reset ???")
-        println("Per abandonar el problema entra SORTIR")
+        println("Per abandonar el problema entra $red$bold$box SORTIR $reset")
         var userAnswer: String
         var resolt = false
         var intents = 0

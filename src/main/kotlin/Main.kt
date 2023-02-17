@@ -27,83 +27,101 @@ val scanner = Scanner(System.`in`)
 fun main() {
     var numProblema: Int
     val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
+    val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
     var currentProblema: Problema
     var problema: Problema
-    when (showMenu("Main")){
-        1 ->{
-            val problemasRemaining = itinerariAprenentatge()
-            for (i in problemasRemaining){
-                numProblema = i-1
-                do {
-                    println("Problema $box$bold$pink ${numProblema+1} $reset")
+    var instruction = 0
+    do{
+        showMenu("Main")
+        instruction = scanner.nextLine().toInt()
+        when(instruction){
+            1 ->{
+                val problemasRemaining = itinerariAprenentatge(listaIntentos)
+                for (i in problemasRemaining){
+                    numProblema = i-1
+                    do {
+                        println("Problema $box$bold$pink ${numProblema+1} $reset")
 
-                    problema = Json.decodeFromString(listaProblemas[numProblema])
-                    currentProblema = Problema(problema.numProblema, problema.enunciado,problema.inputPub,
-                        problema.outputPub,problema.inputPriv,problema.outputPriv,
-                        problema.resuelto, problema.intentos)
+                        problema = Json.decodeFromString(listaProblemas[numProblema])
+                        currentProblema = Problema(problema.numProblema, problema.enunciado,problema.inputPub,
+                            problema.outputPub,problema.inputPriv,problema.outputPriv,
+                            problema.resuelto, problema.intentos)
 
-                    currentProblema.mostrarProblema(problema)
+                        currentProblema.mostrarProblema(problema)
 
-                    println("Vols intentar aquest problema?\n$green$bold$box SI $reset $red$bold$box NO $reset")
+                        println("Vols intentar aquest problema?\n$green$bold$box SI $reset $red$bold$box NO $reset")
 
-                    val intentar = scanner.nextLine().uppercase()
+                        val intentar = scanner.nextLine().uppercase()
 
-                    if (intentar == "SI"){
-                        val intentoProblema = currentProblema.intentarProblema(problema.numProblema, problema)
-                        if (intentoProblema) {
-                            println("Has acertat !")
-                        } else{
-                            println("No has pogut amb el problema")
+                        if (intentar == "SI"){
+                            val intentoProblema = currentProblema.intentarProblema(problema.numProblema, problema)
+                            if (intentoProblema) {
+                                println("Has acertat !")
+                            } else{
+                                println("No has pogut amb el problema")
+                            }
+                        } else if (intentar == "NO"){
+                            val userIntent = Json.encodeToString(Intento(currentProblema.numProblema, currentProblema.enunciado,
+                                "NO INTENTAT", mutableListOf("NO INTENTAT"), 0, false ))
+
+                            File("src/main/kotlin/problemes/intentos.json").appendText(userIntent+"\n")
                         }
-                    } else if (intentar == "NO"){
-                        val userIntent = Json.encodeToString(Intento(currentProblema.numProblema, currentProblema.enunciado,
-                            "NO INTENTAT", mutableListOf("NO INTENTAT"), 0, false ))
 
-                        File("src/main/kotlin/problemes/intentos.json").appendText(userIntent+"\n")
-                    }
+                    } while (intentar != "NEXT")
 
-                } while (intentar == "SORTIR")
-
-            }
-        }
-        2 ->{
-           val problemAIntentar = showProblemList(listaProblemas)
-            currentProblema = decodeProblem(problemAIntentar)
-
-            println("Problema $box$bold$pink $problemAIntentar $reset")
-            currentProblema.mostrarProblema(currentProblema)
-            val intentoProblema = currentProblema.intentarProblema(problemAIntentar, currentProblema)
-            if (intentoProblema) {
-                println("Has acertat !")
-            } else{
-                println("No has pogut amb el problema")
-            }
-        }
-        3 -> showHistoryOfCompletedProblems()
-        4 -> showHelp()
-        5 ->{
-            if (teacherLogin()){
-                when (showMenu("Teacher")){
-                    1 ->{
-                        do {
-                            addNewProblem()
-                            println("Problema afegit, vols afegir un altre?\n$green$bold$box SI $reset $red$bold$box NO $reset")
-                            val altreProblema = scanner.nextLine().uppercase()
-                        } while (altreProblema != "NO")
-                    }
-                    2 ->{
-                        when(showMenu("Report")){
-                        1 -> puntuation()
-                        2 -> restaPorIntentos()
-                        3 -> resultadoGrafic()
-                        }
-                    }
                 }
-            } else{
-                println("No t'has pogut identificar")
             }
+            2 ->{
+                val problemAIntentar = showProblemList(listaProblemas)
+                currentProblema = decodeProblem(problemAIntentar)
+
+                println("Problema $box$bold$pink $problemAIntentar $reset")
+                currentProblema.mostrarProblema(currentProblema)
+                val intentoProblema = currentProblema.intentarProblema(problemAIntentar, currentProblema)
+                if (intentoProblema) {
+                    println("Has acertat !")
+                } else{
+                    println("No has pogut amb el problema")
+                }
+            }
+            3 -> showHistoryOfCompletedProblems(listaIntentos)
+            4 -> showHelp()
+            5 ->{
+                if (teacherLogin()){
+                    do {
+                        showMenu("Teacher")
+                        val teacherInstruction = scanner.nextLine().toInt()
+                        when (teacherInstruction){
+                            1 ->{
+                                do {
+                                    addNewProblem(listaProblemas)
+                                    println("Problema afegit, vols afegir un altre?\n$green$bold$box SI $reset $red$bold$box NO $reset")
+                                    val altreProblema = scanner.nextLine().uppercase()
+                                } while (altreProblema != "NO")
+                            }
+                            2 ->{
+                                showMenu("Report")
+                                do {
+                                    val reportInstruction = scanner.nextLine().toInt()
+                                    when(reportInstruction){
+                                        1 -> puntuation()
+                                        2 -> restaPorIntentos()
+                                        3 -> resultadoGrafic()
+                                    }
+                                } while (reportInstruction != 0)
+                            }
+                        }
+                    } while (teacherInstruction != 0)
+                } else{
+                    println("No t'has pogut identificar")
+                }
+            }
+            6 -> println("""Sortint del Judge$blue$bold ITB $reset
+                |        $blue$bold...$reset
+            """.trimMargin())
         }
-    }
+
+    } while(instruction != 6)
 
 }
 
@@ -139,15 +157,15 @@ fun showProblemList(listaProblemas: List<String>): Int {
     } while (problemAIntentar > listaProblemas.size)
     return problemAIntentar
 }
-fun addNewProblem(){
-    val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
+fun addNewProblem(listaProblemas: List<String>){
+    //val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
     val nextProblemNumber = listaProblemas.size+1
     println("Entra el enunciat")
     val enunciado = scanner.nextLine()
     println("""Entra les entrades del joc de proves public
         |Primer entra l'explicació de la entrada
         |Després entra les entrades
-        |Entra ! quan acabis per desar.
+        |Entra $blue$bold!$reset quan acabis per desar.
     """.trimMargin())
     val inputPublic = mutableListOf<String>()
     do {
@@ -159,7 +177,7 @@ fun addNewProblem(){
     println("""Entra les sortides del joc de proves public
         |Primer entra l'explicació de la sortida
         |Després entra les sortides
-        |Entra ! quan acabis per desar.
+        |Entra $blue$bold!$reset quan acabis per desar.
     """.trimMargin())
     val outputPublic = mutableListOf<String>()
     do {
@@ -171,7 +189,7 @@ fun addNewProblem(){
 
     println("""Entra les entrades del joc de proves privat
         |Entra tantes entrades com vulguis
-        |Entra ! quan acabis per desar.
+        |Entra $blue$bold!$reset quan acabis per desar.
     """.trimMargin())
 
     val inputPriv = mutableListOf<String>()
@@ -184,7 +202,7 @@ fun addNewProblem(){
 
     println("""Entra les sortides del joc de proves privat
         |Entra tantes sortides com vulguis
-        |Entra ! quan acabis per desar.
+        |Entra $blue$bold!$reset quan acabis per desar.
     """.trimMargin())
     val outputPrivat = mutableListOf<String>()
     do {
@@ -246,11 +264,15 @@ fun showHelp(){
         |1. Afegir problema -> Permetrà afegir un nou problema a
         |                      la base de dades.
         |2. Report -> TODO
+        |═════════════════════════════════════════════════════════════════
     """.trimMargin())
+    println("""                    Tornant al menú principal
+                |                              $blue$bold ...... $reset
+            """.trimMargin())
 
 }
-fun showHistoryOfCompletedProblems() {
-    val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
+fun showHistoryOfCompletedProblems(listaIntentos: List<String>) {
+    //val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
     for (i in listaIntentos) {
         val intento = Json.decodeFromString<Intento>(i)
         if (intento.resuelto){
@@ -264,8 +286,8 @@ fun showHistoryOfCompletedProblems() {
     }
 }
 
-fun itinerariAprenentatge(): MutableList<Int> {
-    val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
+fun itinerariAprenentatge(listaIntentos: List<String>): MutableList<Int> {
+    //val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
     val listaProblemas = mutableListOf(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
     for (i in listaIntentos) {
         val intento = Json.decodeFromString<Intento>(i)
@@ -276,40 +298,28 @@ fun itinerariAprenentatge(): MutableList<Int> {
     return  listaProblemas
 }
 
-fun showMenu(menuType: String): Int {
-    var instruction = 0
+fun showMenu(menuType: String){
     when (menuType){
         "Main" -> {
-            do {
-                println("1. Seguir amb l'itinerari del projecte")
-                println("2. Llista de problemes")
-                println("3. Consultar històric de problemes resolts")
-                println("4. Ajuda")
-                println("5. Identifiació de professorat")
-                println("6. Sortir")
-                instruction = scanner.nextLine().toInt()
-            } while (instruction !in 1..6 )
-            return instruction
+            println("1. Seguir amb l'itinerari del projecte")
+            println("2. Llista de problemes")
+            println("3. Consultar històric de problemes resolts")
+            println("4. Ajuda")
+            println("5. Identifiació de professorat")
+            println("6. Sortir")
         }
         "Teacher" -> {
-            do {
-                println("1. Afegir nous problemes")
-                println("2. Treure report de la feina")
-                instruction = scanner.nextLine().toInt()
-            } while (instruction !in 1..2 )
-            return instruction
+            println("1. Afegir nous problemes")
+            println("2. Treure report de la feina")
+            println("0. Enrere")
         }
         "Report" -> {
-            do {
-                println("1. Treure una puntuació en funció dels problemes resolts")
-                println("2. Descomptar per intents")
-                println("3. Mostrar-ho de manera més o menys gràfica (a través de consola)")
-                instruction = scanner.nextLine().toInt()
-            } while (instruction !in 1..3 )
-            return instruction
+            println("1. Treure una puntuació en funció dels problemes resolts")
+            println("2. Descomptar per intents")
+            println("3. Mostrar-ho de manera més o menys gràfica (a través de consola)")
+            println("0. Enrere")
         }
     }
-    return instruction
 }
 fun puntuation(){
 

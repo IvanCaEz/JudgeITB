@@ -8,7 +8,7 @@ import java.io.File
 @Serializable
 class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array<String>,
                 var outputPub: Array<String>, var inputPriv: Array<String>,
-                     var outputPriv: Array<String>, var resuelto: Boolean, var intentos: Int) {
+                     var outputPriv: Array<String>) {
 
     fun mostrarProblema(problema: Problema){
         println(problema.enunciado)
@@ -56,7 +56,3 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
 @Serializable
 data class Intento(val numProblema: Int, val enunciado: String, val inputPriv: String,
                    val outputPriv: MutableList<String>, val intentos: Int, val resuelto: Boolean)
-
-/*
-
- */

@@ -10,25 +10,22 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
                 var outputPub: Array<String>, var inputPriv: Array<String>,
                      var outputPriv: Array<String>, var resuelto: Boolean, var intentos: Int) {
 
-
     fun mostrarProblema(problema: Problema){
         println(problema.enunciado)
-        println("$cyan${bold}Exemple 1$reset")
-        println("${problema.inputPub[0]}\n$purple${bold}Entrada:$reset ${problema.inputPub[1]}")
-        println("${problema.outputPub[0]}\n$purple${bold}Sortida:$reset ${problema.outputPub[1]}")
-        println("$cyan${bold}Exemple 2$reset")
-        println("$purple${bold}Entrada:$reset ${problema.inputPub[2]}")
-        println("$purple${bold}Sortida:$reset ${problema.outputPub[2]}")
+        println("$CYAN${BOLD}Exemple 1$RESET")
+        println("${problema.inputPub[0]}\n$PURPLE${BOLD}Entrada:$RESET ${problema.inputPub[1]}")
+        println("${problema.outputPub[0]}\n$PURPLE${BOLD}Sortida:$RESET ${problema.outputPub[1]}")
+        println("$CYAN${BOLD}Exemple 2$RESET")
+        println("$PURPLE${BOLD}Entrada:$RESET ${problema.inputPub[2]}")
+        println("$PURPLE${BOLD}Sortida:$RESET ${problema.outputPub[2]}")
     }
 
     fun intentarProblema(numProblema: Int, currentProblema: Problema): Boolean {
-        //val listaIntentos = mutableListOf<Triple<Int, String, Boolean>>()
-
         val random = (0..2).random()
         println("El teu input")
-        println("$purple${bold}Entrada:$reset ${currentProblema.inputPriv[random]}")
-        println("$purple${bold}Sortida:$reset ???")
-        println("Per abandonar el problema entra $red$bold$box SORTIR $reset")
+        println("$PURPLE${BOLD}Entrada:$RESET ${currentProblema.inputPriv[random]}")
+        println("$PURPLE${BOLD}Sortida:$RESET ???")
+        println("Per abandonar el problema entra $RED$BOLD$BOX SORTIR $RESET")
         var userAnswer: String
         var resolt = false
         var intents = 0
@@ -41,7 +38,6 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
             } else if (userAnswer == currentProblema.outputPriv[random].uppercase()){
                 resolt = true
             }
-            //listaIntentos.add(Triple(intents, userAnswer, resolt))
             listOfUserAnswers.add(userAnswer)
 
         } while (userAnswer != currentProblema.outputPriv[random].uppercase() && userAnswer != "SORTIR")
@@ -50,7 +46,6 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
             currentProblema.inputPriv[random], listOfUserAnswers, intents, resolt ))
 
         File("src/main/kotlin/problemes/intentos.json").appendText(userIntent+"\n")
-
 
         return resolt
 
@@ -63,47 +58,5 @@ data class Intento(val numProblema: Int, val enunciado: String, val inputPriv: S
                    val outputPriv: MutableList<String>, val intentos: Int, val resuelto: Boolean)
 
 /*
-var continueOrNot = ""
-                    for (i in problemasRemaining){
-                        while (continueOrNot != "NO") {
-                            numProblema = i-1
-                            do {
-                                println("Problema $box$bold$pink ${numProblema+1} $reset")
 
-                                problema = Json.decodeFromString(listaProblemas[numProblema])
-                                currentProblema = Problema(problema.numProblema, problema.enunciado,problema.inputPub,
-                                    problema.outputPub,problema.inputPriv,problema.outputPriv,
-                                    problema.resuelto, problema.intentos)
-
-                                currentProblema.mostrarProblema(problema)
-
-                                println("""Vols intentar aquest problema?
-                                    |         $green$bold$box SI $reset $red$bold$box NO $reset
-                                    |Per pasar al següent problema
-                                    |           $yellow$bold$box NEXT $reset""".trimMargin())
-
-                                val intentar = scanner.nextLine().uppercase()
-
-                                if (intentar == "SI"){
-                                    val intentoProblema = currentProblema.intentarProblema(problema.numProblema, problema)
-                                    if (intentoProblema) {
-                                        println("Has acertat !")
-                                    } else{
-                                        println("No has pogut amb el problema")
-                                    }
-                                } else if (intentar == "NO"){
-                                    val userIntent = Json.encodeToString(Intento(currentProblema.numProblema, currentProblema.enunciado,
-                                        "NO INTENTAT", mutableListOf("NO INTENTAT"), 0, false ))
-
-                                    File("src/main/kotlin/problemes/intentos.json").appendText(userIntent+"\n")
-                                }
-
-                            } while (intentar != "NEXT")
-
-                        println("""Carregant el següent problema$blue$bold ... $reset
-                            |Per deixar de fer problemes entra $red$bold$box NO $reset
-                            |Per continuar entra enter $bold$box$gray ↩ $reset"""
-                            .trimMargin())
-                        continueOrNot = scanner.nextLine().uppercase()
-                    }
  */

@@ -1,0 +1,3 @@
+{"numProblema":1,"enunciado":"Fes un programa que ens ajudi a calcular les dimensions d'una habitació.\nLlegeix l'amplada i la llargada en metres (enters) i mostra'n l'àrea.","inputPriv":"26 20","outputPriv":["123","SORTIR"],"intentos":2,"resuelto":true}
+{"numProblema":1,"enunciado":"Llegeix el diàmetre d'una pizza rodona i imprimeix la seva superfície.\nPots usar Math.PI per escriure el valor de Pi.","inputPriv":"11.1","outputPriv":["1213","SORTIR"],"intentos":2,"resuelto":true}
+{"numProblema":3,"enunciado":"Feu un programa que rebi una temperatura en graus Celsius i la converteixi en graus Fahrenheit","inputPriv":"-7.4","outputPriv":["121","SORTIR"],"intentos":2,"resuelto":false}

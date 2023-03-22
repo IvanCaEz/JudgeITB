@@ -21,6 +21,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    implementation("org.postgresql:postgresql:42.3.1")
+    implementation ("com.zaxxer:HikariCP:5.0.0")
+
+
 
 }
 

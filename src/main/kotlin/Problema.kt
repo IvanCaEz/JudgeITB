@@ -2,7 +2,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
-
+import java.sql.Connection
+import java.sql.PreparedStatement
 
 
 @Serializable
@@ -41,17 +42,38 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
             listOfUserAnswers.add(userAnswer)
 
         } while (userAnswer != currentProblema.outputPriv[random].uppercase() && userAnswer != "SORTIR")
+        listOfUserAnswers.remove("SORTIR")
+        val userIntent = Intento(numProblema, currentProblema.enunciado,
+            currentProblema.inputPriv[random], listOfUserAnswers, intents, resolt )
+        val intentToJSON = Json.encodeToString(userIntent)
 
-        val userIntent = Json.encodeToString(Intento(numProblema, currentProblema.enunciado,
-            currentProblema.inputPriv[random], listOfUserAnswers, intents, resolt ))
+        saveIntentToDB(userIntent, connectToDB())
 
-        File("src/main/kotlin/problemes/intentos.json").appendText(userIntent+"\n")
+        File("src/main/kotlin/problemes/intentos.json").appendText(intentToJSON+"\n")
 
         return resolt
 
     }
 
+    fun saveIntentToDB(intent: Intento, connection: Connection){
+
+        val currentProblemaStatement = "INSERT INTO intents(num_problema, enunciat, input_priv, output_priv, intentos, resuelto ) VALUES (?, ?, ?, ?, ?, ?)"
+        val statement: PreparedStatement = connection.prepareStatement(currentProblemaStatement)
+        statement.setInt(1, intent.numProblema)
+        statement.setString(2, intent.enunciado)
+        statement.setString(3, intent.inputPriv)
+        statement.setArray(4, intent.outputPriv as java.sql.Array )
+        statement.setInt(5, intent.intentos)
+        statement.setBoolean(6, intent.resuelto)
+        statement.executeUpdate()
+
+    connection.close()
+    println("Conexión a la base de datos finalizada")
+    }
+
 }
+
+
 
 @Serializable
 data class Intento(val numProblema: Int, val enunciado: String, val inputPriv: String,

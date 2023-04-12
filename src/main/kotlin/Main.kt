@@ -27,11 +27,11 @@ const val BLUE = "\u001b[38;5;69m"
 
 val scanner = Scanner(System.`in`)
 fun main() {
-    var numProblema: Int
+    val listaProblemasDB = getProblemaFromDB(connectToDB())
+    val listaIntentosDB = getIntentsFromDB(connectToDB())
     val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
     val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
     var currentProblema: Problema
-    var problema: Problema
     var instruction: Int
     do{
         showMenu("Main")
@@ -39,44 +39,40 @@ fun main() {
         when(instruction){
             1 ->{
                 var stop = false
-                val problemasRemaining = itinerariAprenentatge(listaIntentos, listaProblemas)
+                val problemasRemaining = itinerariAprenentatgeDB(listaProblemasDB, listaIntentosDB)
+                println(problemasRemaining.size)
                 while (!stop) {
-                    for (i in problemasRemaining){
-                        numProblema = i-1
-                        println("Problema $BOX$BOLD$PINK ${numProblema+1} $RESET")
-
-                        problema = Json.decodeFromString(listaProblemas[numProblema])
-                        currentProblema = Problema(problema.numProblema, problema.enunciado,problema.inputPub,
-                            problema.outputPub,problema.inputPriv,problema.outputPriv)
-
-                        currentProblema.mostrarProblema(problema)
-
-                        println("""Vols intentar aquest problema?
+                    for (problema in listaProblemasDB){
+                        if (problema.numProblema in problemasRemaining){
+                            println("Problema $BOX$BOLD$PINK ${problema.numProblema} $RESET")
+                            problema.mostrarProblema(problema)
+                            println("""Vols intentar aquest problema?
                                     |         $GREEN$BOLD$BOX SI $RESET $YELLOW$BOLD$BOX NEXT $RESET
                                     |Per deixar de fer problemes entra $RED$BOLD$BOX SORTIR $RESET""".trimMargin())
 
-                        val intentar = scanner.nextLine().uppercase()
-                        if (intentar == "SI"){
-                            val intentoProblema = currentProblema.intentarProblema(problema.numProblema, problema)
-                            if (intentoProblema) {
-                                println("Has acertat !")
-                            } else{
-                                println("No has pogut amb el problema")
+                            val intentar = scanner.nextLine().uppercase()
+                            if (intentar == "SI"){
+                                val intentoProblema = problema.intentarProblema(problema.numProblema, problema)
+                                if (intentoProblema) {
+                                    println("Has acertat !")
+                                } else{
+                                    println("No has pogut amb el problema")
+                                }
+                            } else if (intentar == "NEXT"){
+                                println("""Carregant el següent problema$BLUE$BOLD ... $RESET""".trimMargin())
+                            } else if (intentar == "SORTIR"){
+                                stop = true
+                                break
                             }
-                        } else if (intentar == "NEXT"){
-                            println("""Carregant el següent problema$BLUE$BOLD ... $RESET""".trimMargin())
-                        } else if (intentar == "SORTIR"){
-                            stop = true
-                            break
                         }
+
                     }
                 }
-
             }
             2 ->{
-                val problemAIntentar = showProblemList(listaProblemas)
+                val problemAIntentar = showProblemList(listaProblemasDB)
                 if (problemAIntentar != 0){
-                    currentProblema = decodeProblem(problemAIntentar)
+                    currentProblema = decodeProblem(problemAIntentar, listaProblemasDB)
                     println("Problema $BOX$BOLD$PINK $problemAIntentar $RESET")
                     currentProblema.mostrarProblema(currentProblema)
                     val intentoProblema = currentProblema.intentarProblema(problemAIntentar, currentProblema)
@@ -88,7 +84,7 @@ fun main() {
                 }
 
             }
-            3 -> showHistoryOfCompletedProblems(listaIntentos)
+            3 -> showHistoryOfProblemsFromDB(listaIntentosDB)
             4 -> showHelp()
             5 ->{
                 if (teacherLogin()){
@@ -98,12 +94,12 @@ fun main() {
                         when (teacherInstruction){
                             1 ->{
                                 do {
-                                    addNewProblem(listaProblemas)
+                                    addNewProblem(listaProblemasDB)
                                     println("Problema afegit, vols afegir un altre?\n$GREEN$BOLD$BOX SI $RESET $RED$BOLD$BOX NO $RESET")
                                     val altreProblema = scanner.nextLine().uppercase()
                                 } while (altreProblema != "NO")
                             }
-                            2 -> getPuntuation(getIntents(listaIntentos), listaProblemas)
+                            2 -> getPuntuation(getIntents(listaIntentosDB), listaProblemasDB)
                         }
                     } while (teacherInstruction != 0)
                 } else{
@@ -124,13 +120,8 @@ fun main() {
  * @param numProblema número del problema a decodejar
  * @return Un Problema
  */
-fun decodeProblem(numProblema: Int): Problema {
-    val listaProblemas = File("src/main/kotlin/problemes/problemes.json").readLines()
-    val problema: Problema = Json.decodeFromString(listaProblemas[numProblema-1])
-    return Problema(
-        problema.numProblema, problema.enunciado, problema.inputPub,
-        problema.outputPub, problema.inputPriv, problema.outputPriv,
-    )
+fun decodeProblem(numProblema: Int, listaProblemas: List<Problema>): Problema {
+    return listaProblemas.filter { numProblema == it.numProblema }[0]
 }
 /**
  * Aquesta funció mostra tots els problemas que hi ha a la base de dades.
@@ -139,20 +130,11 @@ fun decodeProblem(numProblema: Int): Problema {
  * @param listaProblemas Llista amb tots els problemes en format String
  * @return Un Int (el número del problema a intentar)
  */
-fun showProblemList(listaProblemas: List<String>): Int {
+fun showProblemList(listaProblemas: List<Problema>): Int {
     var problemAIntentar: String
-    var numProblema = 0
-    var currentProblema: Problema
-    var problema: Problema
-    for (i in listaProblemas){
-        println("Problema $BOX$BOLD$PINK ${numProblema+1} $RESET")
-
-        problema = Json.decodeFromString(listaProblemas[numProblema])
-        currentProblema = Problema(problema.numProblema, problema.enunciado,problema.inputPub,
-            problema.outputPub,problema.inputPriv,problema.outputPriv)
-
-        currentProblema.mostrarProblema(problema)
-        numProblema++
+    for (problema in listaProblemas){
+        println("Problema $BOX$BOLD$PINK ${problema.numProblema} $RESET")
+        problema.mostrarProblema(problema)
     }
     println("""Entra el$BOLD número$RESET del problema que vols intentar
         |Si no vols intentar cap problema entra $BOX$BOLD$ORANGE 0 $RESET
@@ -169,7 +151,7 @@ fun showProblemList(listaProblemas: List<String>): Int {
  * Per pasar al següent camp s'ha d'entrar "!"
  * @param listaProblemas Llista amb tots els problemes en format String
  */
-fun addNewProblem(listaProblemas: List<String>){
+fun addNewProblem(listaProblemas: List<Problema>){
     val nextProblemNumber = listaProblemas.size+1
     println("Entra el enunciat")
     val enunciado = scanner.nextLine()
@@ -198,36 +180,35 @@ fun addNewProblem(listaProblemas: List<String>){
         }
     } while (singleOutput != "!")
 
-    println("""Entra les entrades del joc de proves privat
-        |Entra tantes entrades com vulguis
-        |Entra $BLUE$BOLD!$RESET quan acabis per desar.
+    println("""Entra les entrades del joc de proves privat.
+        |Entra $BLUE${BOLD}3$RESET entrades.
     """.trimMargin())
 
     val inputPriv = mutableListOf<String>()
-    do {
+    repeat(3){
         val singleInput = scanner.nextLine()
-        if (singleInput != "!"){
-            inputPriv.add(singleInput)
-        }
-    } while (singleInput != "!")
+        inputPriv.add(singleInput)
 
-    println("""Entra les sortides del joc de proves privat
-        |Entra tantes sortides com vulguis
-        |Entra $BLUE$BOLD!$RESET quan acabis per desar.
+    }
+
+    println("""Entra les sortides del joc de proves privat.
+        |Entra $BLUE${BOLD}3$RESET sortides.
     """.trimMargin())
     val outputPrivat = mutableListOf<String>()
-    do {
+    repeat(3){
         val singleOutput = scanner.nextLine()
-        if (singleOutput != "!"){
-            outputPrivat.add(singleOutput)
-        }
-    } while (singleOutput != "!")
+        outputPrivat.add(singleOutput)
+    }
 
     val newProblema = Problema(nextProblemNumber, enunciado,inputPublic.toTypedArray(),
         outputPublic.toTypedArray(),inputPriv.toTypedArray(),outputPrivat.toTypedArray())
 
-    val encodeProblem = Json.encodeToString(newProblema )
+    insertProblema(connectToDB(), newProblema)
+/*
+val encodeProblem = Json.encodeToString(newProblema )
     File("src/main/kotlin/problemes/problemes.json").appendText("\n"+encodeProblem)
+ */
+
 
 }
 /**
@@ -309,6 +290,18 @@ fun showHistoryOfCompletedProblems(listaIntentos: List<String>) {
         println("$PURPLE${BOLD}Intents:$RESET ${intento.intentos}")
         }
 }
+fun showHistoryOfProblemsFromDB(listaIntentos: List<Intento>) {
+    for (intento in listaIntentos) {
+        println("Problema $BOX$BOLD$PINK ${intento.numProblema} $RESET")
+        println(intento.enunciado)
+        println("$PURPLE${BOLD}Entrada:$RESET ${intento.inputPriv}")
+        println("$PURPLE${BOLD}Sortida:$RESET ${intento.outputPriv}")
+        if (intento.resuelto){
+            println("$PURPLE${BOLD}Resolt:$RESET $BOLD$BOX$GREEN SI $RESET")
+        } else println("$PURPLE${BOLD}Resolt:$RESET $BOLD$BOX$RED NO $RESET")
+        println("$PURPLE${BOLD}Intents:$RESET ${intento.intentos}")
+    }
+}
 /**
  * Aquesta funció itera a través de la llista de problemas de la base de dades
  * i va afegint els seus números a una llista mutable.
@@ -332,6 +325,18 @@ fun itinerariAprenentatge(listaIntentos: List<String>, listaProblemas: List<Stri
     }
     return  listaNumeros
 }
+fun itinerariAprenentatgeDB( listaProblemas: List<Problema>, listaIntentos: List<Intento>): MutableList<Int> {
+    val listaNumeros = mutableListOf<Int>()
+    for (problema in listaProblemas){
+        listaNumeros.add(problema.numProblema)
+    }
+    for (intento in listaIntentos) {
+        if (intento.resuelto){
+            listaNumeros.remove(intento.numProblema)
+        }
+    }
+    return listaNumeros
+}
 /**
  * Aquesta funció mostra els diferents menus en funció d'un string que rep.
  *
@@ -343,7 +348,7 @@ fun showMenu(menuType: String){
         "Main" -> {
             println("$BLUE${BOLD}1.$RESET Seguir amb l'itinerari del projecte")
             println("$BLUE${BOLD}2.$RESET Llista de problemes")
-            println("$BLUE${BOLD}3.$RESET Consultar històric de problemes resolts")
+            println("$BLUE${BOLD}3.$RESET Consultar històric de problemes")
             println("$BLUE${BOLD}4.$RESET Ajuda")
             println("$BLUE${BOLD}5.$RESET Identifiació de professorat")
             println("$BLUE${BOLD}6.$RESET Sortir")
@@ -369,7 +374,7 @@ fun showMenu(menuType: String){
  * @see getIntents
  * @see Double.round
  */
-fun getPuntuation(problemasResueltos: List<Pair<Int,Int>>, listaProblemas: List<String>) {
+fun getPuntuation(problemasResueltos: List<Pair<Int,Int>>, listaProblemas: List<Problema>) {
     val problemasTotales = listaProblemas.size
     var fallos = 0.0
     println("""═══════════════════════════════════════════
@@ -423,11 +428,10 @@ fun getPuntuation(problemasResueltos: List<Pair<Int,Int>>, listaProblemas: List<
  * @return Una llista de Pair de Ints
  * @see getPuntuation
  */
-fun getIntents(listaIntentos: List<String>): List<Pair<Int, Int>> {
+fun getIntents(listaIntentos: List<Intento>): List<Pair<Int, Int>> {
     val problemasResueltos = mutableSetOf<Int>()
     val problemasResueltosWithIntentos = mutableSetOf<Pair<Int, Int>>()
-    for (i in listaIntentos) {
-        val intento = Json.decodeFromString<Intento>(i)
+    for (intento in listaIntentos) {
         if (intento.resuelto) {
             if (intento.numProblema !in problemasResueltos) {
                 problemasResueltos.add(intento.numProblema)

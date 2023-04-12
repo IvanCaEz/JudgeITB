@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.sql.Connection
 import java.sql.PreparedStatement
+import java.sql.SQLException
 
 
 @Serializable
@@ -44,7 +45,7 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
         } while (userAnswer != currentProblema.outputPriv[random].uppercase() && userAnswer != "SORTIR")
         listOfUserAnswers.remove("SORTIR")
         val userIntent = Intento(numProblema, currentProblema.enunciado,
-            currentProblema.inputPriv[random], listOfUserAnswers, intents, resolt )
+            currentProblema.inputPriv[random], listOfUserAnswers, intents, resolt)
         val intentToJSON = Json.encodeToString(userIntent)
 
         saveIntentToDB(userIntent, connectToDB())
@@ -56,19 +57,34 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
     }
 
     fun saveIntentToDB(intent: Intento, connection: Connection){
+        var idPrivat  = 0
 
-        val currentProblemaStatement = "INSERT INTO intents(num_problema, enunciat, input_priv, output_priv, intentos, resuelto ) VALUES (?, ?, ?, ?, ?, ?)"
-        val statement: PreparedStatement = connection.prepareStatement(currentProblemaStatement)
-        statement.setInt(1, intent.numProblema)
-        statement.setString(2, intent.enunciado)
-        statement.setString(3, intent.inputPriv)
-        statement.setArray(4, intent.outputPriv as java.sql.Array )
-        statement.setInt(5, intent.intentos)
-        statement.setBoolean(6, intent.resuelto)
-        statement.executeUpdate()
+            // Preparamos una query para obtener el id que corresponde al input y output privado que se ha generado
+            // de manera aleatoria en el intento
+            val selectOutputPriv = "SELECT id_prova_privat FROM prova_privat WHERE  input = ? "
+           // val outputPrivResult = getOutputPrivStatement.executeQuery(selectOutputPriv)
+            val outputStatement = connection.prepareStatement(selectOutputPriv)
+            outputStatement.setString(1, intent.inputPriv)
+            val result = outputStatement.executeQuery()
+            while (result.next()){
+                idPrivat = result.getInt("id_prova_privat")
+                println("El id privat es $idPrivat")
+            }
 
-    connection.close()
-    println("Conexión a la base de datos finalizada")
+            for (respostaUsuari in 0.. intent.outputPriv.lastIndex){
+                val currentProblemaStatement = "INSERT INTO intents(num_problema, id_prova_privat, resposta_usuari, resuelto ) VALUES (?, ?, ?, ?)"
+                val statement: PreparedStatement = connection.prepareStatement(currentProblemaStatement)
+                statement.setInt(1, intent.numProblema)
+                statement.setInt(2, idPrivat)
+                statement.setString(3, intent.outputPriv[respostaUsuari].toString())
+                statement.setBoolean(4, intent.resuelto)
+                statement.executeUpdate()
+                println("DB ACTUALITZADA")
+            }
+            connection.close()
+
+        println("Conexión a la base de datos finalizada")
+
     }
 
 }

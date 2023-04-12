@@ -3,11 +3,7 @@
  * @version 2.0 - 2023/02/08
  */
 
-import kotlinx.serialization.json.Json
-import java.io.File
 import java.util.*
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlin.math.round
 
 
@@ -20,7 +16,6 @@ const val CYAN = "\u001b[38;5;87m"
 const val GREEN = "\u001b[38;5;10m"
 const val ORANGE = "\u001b[38;5;202m"
 const val YELLOW = "\u001b[38;5;11m"
-//const val GRAY = "\u001b[38;5;7m"
 const val PINK = "\u001b[38;5;177m"
 const val PURPLE = "\u001b[38;5;99m"
 const val BLUE = "\u001b[38;5;69m"
@@ -29,8 +24,6 @@ val scanner = Scanner(System.`in`)
 fun main() {
     val listaProblemasDB = getProblemaFromDB(connectToDB())
     val listaIntentosDB = getIntentsFromDB(connectToDB())
-    val listaProblemas =  File("src/main/kotlin/problemes/problemes.json").readLines()
-    val listaIntentos =  File("src/main/kotlin/problemes/intentos.json").readLines()
     var currentProblema: Problema
     var instruction: Int
     do{
@@ -40,7 +33,6 @@ fun main() {
             1 ->{
                 var stop = false
                 val problemasRemaining = itinerariAprenentatgeDB(listaProblemasDB, listaIntentosDB)
-                println(problemasRemaining.size)
                 while (!stop) {
                     for (problema in listaProblemasDB){
                         if (problema.numProblema in problemasRemaining){
@@ -115,9 +107,8 @@ fun main() {
     } while(instruction != 6)
 }
 /**
- * Aquesta funció decodeja un problema des del fitxer JSON
- * i retorna un Problema
- * @param numProblema número del problema a decodejar
+ * Aquesta funció filtra la llista de problemes amb el número del problema a intentar i el retorna
+ * @param numProblema número del problema a intentar
  * @return Un Problema
  */
 fun decodeProblem(numProblema: Int, listaProblemas: List<Problema>): Problema {
@@ -127,7 +118,7 @@ fun decodeProblem(numProblema: Int, listaProblemas: List<Problema>): Problema {
  * Aquesta funció mostra tots els problemas que hi ha a la base de dades.
  * També permet escollir un problema per intentar resoldre'l,
  * si no es vol intentar cap, s'ha d'entrar 0
- * @param listaProblemas Llista amb tots els problemes en format String
+ * @param listaProblemas Llista amb tots els problemes
  * @return Un Int (el número del problema a intentar)
  */
 fun showProblemList(listaProblemas: List<Problema>): Int {
@@ -149,7 +140,7 @@ fun showProblemList(listaProblemas: List<Problema>): Int {
  * Aquesta funció permet al professor crear un nou problema.
  * Va demanant al professor que entri els camps del problema (enunciat, joc de proves...)
  * Per pasar al següent camp s'ha d'entrar "!"
- * @param listaProblemas Llista amb tots els problemes en format String
+ * @param listaProblemas Llista amb tots els problemes
  */
 fun addNewProblem(listaProblemas: List<Problema>){
     val nextProblemNumber = listaProblemas.size+1
@@ -203,11 +194,8 @@ fun addNewProblem(listaProblemas: List<Problema>){
     val newProblema = Problema(nextProblemNumber, enunciado,inputPublic.toTypedArray(),
         outputPublic.toTypedArray(),inputPriv.toTypedArray(),outputPrivat.toTypedArray())
 
+    //Cridem a la funció que s'encarrega de inserir el problema a la base de dades
     insertProblema(connectToDB(), newProblema)
-/*
-val encodeProblem = Json.encodeToString(newProblema )
-    File("src/main/kotlin/problemes/problemes.json").appendText("\n"+encodeProblem)
- */
 
 
 }
@@ -275,21 +263,8 @@ fun showHelp(){
 }
 /**
  * Aquesta funció mostra els intents realitzats a cada problema i mostra si han estat resolts o no.
- * @param listaIntentos Llista amb tots els intents en format String
+ * @param listaIntentos Llista amb tots els intents
  */
-fun showHistoryOfCompletedProblems(listaIntentos: List<String>) {
-    for (i in listaIntentos) {
-        val intento = Json.decodeFromString<Intento>(i)
-        println("Problema $BOX$BOLD$PINK ${intento.numProblema} $RESET")
-        println(intento.enunciado)
-        println("$PURPLE${BOLD}Entrada:$RESET ${intento.inputPriv}")
-        println("$PURPLE${BOLD}Sortida:$RESET ${intento.outputPriv}")
-        if (intento.resuelto){
-            println("$PURPLE${BOLD}Resolt:$RESET $BOLD$BOX$GREEN SI $RESET")
-        } else println("$PURPLE${BOLD}Resolt:$RESET $BOLD$BOX$RED NO $RESET")
-        println("$PURPLE${BOLD}Intents:$RESET ${intento.intentos}")
-        }
-}
 fun showHistoryOfProblemsFromDB(listaIntentos: List<Intento>) {
     for (intento in listaIntentos) {
         println("Problema $BOX$BOLD$PINK ${intento.numProblema} $RESET")
@@ -307,24 +282,10 @@ fun showHistoryOfProblemsFromDB(listaIntentos: List<Intento>) {
  * i va afegint els seus números a una llista mutable.
  * Després itera la llista d'intents i quan troba un problema resolt,
  * treu el número corresponent de la llista anterior i la retorna.
- * @param listaProblemas Llista amb tots els problemes en format String
- * @param listaIntentos Llista amb tots els intents en format String
+ * @param listaProblemas Llista amb tots els problemes
+ * @param listaIntentos Llista amb tots els intents
  * @return  Una llista mutable de Ints
  */
-fun itinerariAprenentatge(listaIntentos: List<String>, listaProblemas: List<String>): MutableList<Int> {
-    val listaNumeros = mutableListOf<Int>()
-    for (i in listaProblemas){
-        val problema = Json.decodeFromString<Problema>(i)
-        listaNumeros.add(problema.numProblema)
-    }
-    for (i in listaIntentos) {
-        val intento = Json.decodeFromString<Intento>(i)
-        if (intento.resuelto){
-            listaNumeros.remove(intento.numProblema)
-        }
-    }
-    return  listaNumeros
-}
 fun itinerariAprenentatgeDB( listaProblemas: List<Problema>, listaIntentos: List<Intento>): MutableList<Int> {
     val listaNumeros = mutableListOf<Int>()
     for (problema in listaProblemas){
@@ -370,7 +331,7 @@ fun showMenu(menuType: String){
  * en format Double que hem rodonejat a un decimal.
  *
  * @param problemasResueltos Llista de pars d'ints que corresponen al número del problema resolt i els seus intents.
- * @param listaProblemas Llista de problemas en format String
+ * @param listaProblemas Llista de problemas
  * @see getIntents
  * @see Double.round
  */
@@ -424,7 +385,7 @@ fun getPuntuation(problemasResueltos: List<Pair<Int,Int>>, listaProblemas: List<
  * el número del problema a un set i un par amb el mateix número i els seus intents a un altre set.
  * Retorna el set de pars.
  *
- * @param listaIntentos Llista amb els intents amb format String
+ * @param listaIntentos Llista amb els intents
  * @return Una llista de Pair de Ints
  * @see getPuntuation
  */

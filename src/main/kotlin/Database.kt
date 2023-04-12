@@ -31,9 +31,8 @@ fun main() {
     //Per veure els problemes des de la tabla de la base de dades
     printProblema(getProblemaFromDB(connectToDB()))
 
-    //println(getIntentsFromDB(connectToDB()).size)
+    // Per veure els intents de la base de dades
     val listaIntents = getIntentsFromDB(connectToDB())
-
     for (intent in listaIntents){
         println(intent)
     }

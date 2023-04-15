@@ -48,7 +48,7 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
             currentProblema.inputPriv[random], listOfUserAnswers, intents, resolt)
         val intentToJSON = Json.encodeToString(userIntent)
 
-        saveIntentToDB(userIntent, connectToDB())
+        saveIntentToDB(userIntent, db.connection!!)
 
         File("src/main/kotlin/problemes/intentos.json").appendText(intentToJSON+"\n")
 
@@ -79,11 +79,7 @@ class Problema (var numProblema: Int, var enunciado: String, var inputPub: Array
                 statement.setString(3, intent.outputPriv[respostaUsuari].toString())
                 statement.setBoolean(4, intent.resuelto)
                 statement.executeUpdate()
-                println("DB ACTUALITZADA")
             }
-            connection.close()
-
-        println("Conexión a la base de datos finalizada")
 
     }
 

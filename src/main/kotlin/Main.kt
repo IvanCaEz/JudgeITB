@@ -6,7 +6,7 @@
 import java.util.*
 import kotlin.math.round
 
-
+// Definim aquí variables globals
 const val RESET = "\u001b[0m"
 const val BOX = "\u001b[51m"
 const val BOLD = "\u001b[1m"
@@ -21,13 +21,20 @@ const val PURPLE = "\u001b[38;5;99m"
 const val BLUE = "\u001b[38;5;69m"
 
 val scanner = Scanner(System.`in`)
+val db = Database()
+
+/*
+ Per popular la taula de la base de dades amb els problemes del JSON, entra al menu de professor
+ i utilitza la primera opció, després surt del programa i torna a iniciar-ho.
+ */
 fun main() {
-    val listaProblemasDB = getProblemaFromDB(connectToDB())
-    val listaIntentosDB = getIntentsFromDB(connectToDB())
+
+    val listaProblemasDB = db.getProblemaFromDB()
     var currentProblema: Problema
     var instruction: Int
     do{
         showMenu("Main")
+        val listaIntentosDB = db.getIntentsFromDB()
         instruction = scanner.nextLine().toInt()
         when(instruction){
             1 ->{
@@ -84,14 +91,15 @@ fun main() {
                         showMenu("Teacher")
                         val teacherInstruction = scanner.nextLine().toInt()
                         when (teacherInstruction){
-                            1 ->{
+                            1 -> db.insertsIntoTables(db.getListaProblemasFromJSON())
+                            2 ->{
                                 do {
                                     addNewProblem(listaProblemasDB)
                                     println("Problema afegit, vols afegir un altre?\n$GREEN$BOLD$BOX SI $RESET $RED$BOLD$BOX NO $RESET")
                                     val altreProblema = scanner.nextLine().uppercase()
                                 } while (altreProblema != "NO")
                             }
-                            2 -> getPuntuation(getIntents(listaIntentosDB), listaProblemasDB)
+                            3 -> getPuntuation(getIntents(listaIntentosDB), listaProblemasDB)
                         }
                     } while (teacherInstruction != 0)
                 } else{
@@ -195,7 +203,7 @@ fun addNewProblem(listaProblemas: List<Problema>){
         outputPublic.toTypedArray(),inputPriv.toTypedArray(),outputPrivat.toTypedArray())
 
     //Cridem a la funció que s'encarrega de inserir el problema a la base de dades
-    insertProblema(connectToDB(), newProblema)
+    db.insertProblema( newProblema)
 
 
 }
@@ -315,8 +323,10 @@ fun showMenu(menuType: String){
             println("$BLUE${BOLD}6.$RESET Sortir")
         }
         "Teacher" -> {
-            println("$BLUE${BOLD}1.$RESET Afegir nous problemes")
-            println("$BLUE${BOLD}2.$RESET Treure report de la feina")
+            println("$BLUE${BOLD}1.$RESET Popular base de dades.")
+            println("$BLUE${BOLD}2.$RESET Afegir nous problemes.")
+            println("$BLUE${BOLD}3.$RESET Treure report de la feina.")
+
             println("$BLUE${BOLD}0.$RESET Enrere")
         }
     }
